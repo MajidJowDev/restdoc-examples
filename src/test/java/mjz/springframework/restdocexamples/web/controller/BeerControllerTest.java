@@ -15,7 +15,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentationExtension;
+import org.springframework.restdocs.constraints.ConstraintDescriptions;
+import org.springframework.restdocs.payload.FieldDescriptor;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -30,6 +33,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 import static  org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.*; // DO NOT FORGET to use this import if you want to leverage RestDoc
 import static org.springframework.restdocs.payload.PayloadDocumentation.*;
 import static org.springframework.restdocs.request.RequestDocumentation.*;
+import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 //for setting up mockMvc with the RestDoc we need to add two following annotations
@@ -91,12 +95,16 @@ class BeerControllerTest {
         BeerDto beerDto =  getValidBeerDto();
         String beerDtoJson = objectMapper.writeValueAsString(beerDto);
 
+        // pass in the DTO class so that the spring RestDocs can use reflection and get desc
+        ConstrainedFields fields = new ConstrainedFields(BeerDto.class);
+
         mockMvc.perform(post("/api/v1/beer/")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(beerDtoJson))
                 .andExpect(status().isCreated())
                 .andDo(document("v1/beer",
                         requestFields(
+                                /*
                                 fieldWithPath("id").ignored(), // for the fields that should not pass in (users should not send), we use ignore
                                 fieldWithPath("version").ignored(),
                                 fieldWithPath("createdDate").ignored(),
@@ -106,7 +114,20 @@ class BeerControllerTest {
                                 fieldWithPath("upc").description("Beer UPC").attributes(),
                                 fieldWithPath("price").description("Beer Price"),
                                 fieldWithPath("quantityOnHand").ignored()
+                                 */
+                                fields.withPath("id").ignored(), // for the fields that should not pass in (users should not send), we use ignore
+                                fields.withPath("version").ignored(),
+                                fields.withPath("createdDate").ignored(),
+                                fields.withPath("lastModifiedDate").ignored(),
+                                fields.withPath("beerName").description("Name of the beer"),
+                                fields.withPath("beerStyle").description("Style of Beer"),
+                                fields.withPath("upc").description("Beer UPC").attributes(),
+                                fields.withPath("price").description("Beer Price"),
+                                fields.withPath("quantityOnHand").ignored()
                         )));
+        // after changing the method, we should "Clean" the Maven project and "Package" it, it downloads the dependencies
+        //and then generates the ascii docs (.adoc) files in the "target/generated-snippets" according to the template file
+        // in directory "test.resources.org.springframework.restdocs.templates.request-fields.snippet"
     }
 
     @Test
@@ -128,6 +149,22 @@ class BeerControllerTest {
                 .upc(123123123123L)
                 .build();
 
+    }
+
+
+    private static class ConstrainedFields {
+
+        private final ConstraintDescriptions constraintDescriptions;
+        // spring RestDocs uses Reflections to get/extract information from the field description
+        ConstrainedFields(Class<?> input) {
+            this.constraintDescriptions = new ConstraintDescriptions(input);
+        }
+
+        private FieldDescriptor withPath(String path) {
+            return fieldWithPath(path).attributes(key("constraints").value(StringUtils
+                    .collectionToDelimitedString(this.constraintDescriptions
+                            .descriptionsForProperty(path), ". ")));
+        }
     }
 
 }
