@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 //for setting up mockMvc with the RestDoc we need to add two following annotations
 @ExtendWith(RestDocumentationExtension.class)
-@AutoConfigureRestDocs
+@AutoConfigureRestDocs(uriScheme = "https", uriHost = "dev.majidspring.com", uriPort = 80) // setting the Host params to customize the host uri
 @WebMvcTest(BeerController.class)
 @ComponentScan(basePackages = "mjz.springframework.restdocexamples.web.mappers")
 //@AutoConfigureMockMvc
