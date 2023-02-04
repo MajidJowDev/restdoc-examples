@@ -63,7 +63,7 @@ class BeerControllerTest {
                         .param("iscold", "yes") // this controller does not actually accept query parameters and is going to ignore this param, but we added it as an example
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andDo(document("v1/beer",
+                .andDo(document("v1/beer-get",    // setting the doc generator info for .adoc s
                         pathParameters( // setting endpoint address and parameters
                             parameterWithName("beerId").description("UUID of desired beer to get.")
                         ),
@@ -102,7 +102,7 @@ class BeerControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(beerDtoJson))
                 .andExpect(status().isCreated())
-                .andDo(document("v1/beer",
+                .andDo(document("v1/beer-new",  // the doc names can be whatever we want (just to make it understandable each one belongs to what operation)
                         requestFields(
                                 /*
                                 fieldWithPath("id").ignored(), // for the fields that should not pass in (users should not send), we use ignore
