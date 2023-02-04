@@ -147,6 +147,34 @@
                     </dependency>
                 </dependencies>
             </plugin>
+<!--  added to configure spring boot to publish RestDocs (we want to move index.html from "generated-docs" to "classes" directory)          -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+<!--   targeting the project build output directory to "static/docs" and copy the contents of "generated-docs" to "static/docs"
+                          this way the generated docs will be accessible in our final Jar output as REST API Documentation-->
+                            <outputDirectory>
+                                ${project.build.outputDirectory}/static/docs
+                            </outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>
+                                        ${project.build.directory}/generated-docs
+                                    </directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
